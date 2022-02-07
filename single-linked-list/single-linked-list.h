@@ -95,6 +95,7 @@ class SingleLinkedList {
     // Инкремент итератора, не указывающего на существующий элемент списка,
     // приводит к неопределённому поведению
     BasicIterator& operator++() noexcept {
+      assert(node_ != nullptr);
       node_ = node_->next_node;
 
       return *this;
@@ -116,6 +117,7 @@ class SingleLinkedList {
     // Вызов этого оператора у итератора, не указывающего на существующий
     // элемент списка, приводит к неопределённому поведению
     [[nodiscard]] reference operator*() const noexcept {
+      assert(node_ != nullptr);
       return node_->value;
     }
 
@@ -124,6 +126,7 @@ class SingleLinkedList {
     // Вызов этого оператора у итератора, не указывающего на существующий
     // элемент списка, приводит к неопределённому поведению
     [[nodiscard]] pointer operator->() const noexcept {
+      assert(node_ != nullptr);
       return &node_->value;
     }
 
@@ -166,18 +169,12 @@ public:
   SingleLinkedList() {}
 
   SingleLinkedList(std::initializer_list<Type> values) {
-    SingleLinkedList<Type> temp_list;
-
-    CreateTempList(temp_list, values);
-    swap(temp_list);
+    CreateTempList(values);
   }
 
   SingleLinkedList(const SingleLinkedList& other) {
     std::vector<Type> temp_storage(other.begin(), other.end());
-    SingleLinkedList<Type> temp_list;
-
-    CreateTempList(temp_list, temp_storage);
-    swap(temp_list);
+    CreateTempList(temp_storage);
   }
 
   SingleLinkedList& operator=(const SingleLinkedList& rhs) {
@@ -277,6 +274,7 @@ public:
    * Если при создании элемента будет выброшено исключение, список останется в прежнем состоянии
    */
   Iterator InsertAfter(ConstIterator pos, const Type& value) {
+    assert(pos.node_ != nullptr);
     auto& prev_node = pos.node_;
 
     prev_node->next_node = new Node(value, prev_node->next_node);
@@ -286,6 +284,7 @@ public:
   }
 
   void PopFront() noexcept {
+    assert(!IsEmpty());
     auto const second_node = head_.next_node->next_node;
 
     delete head_.next_node;
@@ -298,6 +297,7 @@ public:
    * Возвращает итератор на элемент, следующий за удалённым
    */
   Iterator EraseAfter(ConstIterator pos) noexcept {
+    assert(!IsEmpty());
     auto const node_to_erase = pos.node_->next_node;
     auto const node_after_erased = node_to_erase->next_node;
 
@@ -314,10 +314,14 @@ private:
   size_t size_ = 0;
 
   template <typename T>
-  void CreateTempList(SingleLinkedList<Type> &list, T container) {
+  void CreateTempList(T container) {
+    SingleLinkedList<Type> temp_list;
+
     for (auto it = std::rbegin(container); it != std::rend(container); ++it) {
-      list.PushFront(*it);
+      temp_list.PushFront(*it);
     }
+
+    swap(temp_list);
   }
 };
 
